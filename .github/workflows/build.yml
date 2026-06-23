@@ -25,18 +25,17 @@ jobs:
           cp index.html www/
           cp manifest.json www/
           cp service-worker.js www/
-          cp icon.svg www/ || true
-          cp icon-192.png www/ || true
-          cp icon-512.png www/ || true
+          cp icon.svg www/ 2>/dev/null || true
+          cp icon-192.png www/ 2>/dev/null || true
+          cp icon-512.png www/ 2>/dev/null || true
 
       - name: Install Capacitor
         run: |
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
 
       - name: Init Capacitor
-        run: |
-          npx cap init "CYBER GYM" "com.cybergym.app" --web-dir www
+        run: npx cap init "CYBER GYM" "com.cybergym.app" --web-dir www
 
       - name: Add Android
         run: npx cap add android
@@ -49,8 +48,11 @@ jobs:
           sed -i 's/targetSdk = .*/targetSdk = 34/' android/app/build.gradle
           sed -i 's/compileSdk = .*/compileSdk = 34/' android/app/build.gradle
 
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
       - name: Build APK
-        run: cd android && ./gradlew assembleRelease
+        run: cd android && ./gradlew assembleRelease --no-daemon
 
       - name: Sign APK
         run: |

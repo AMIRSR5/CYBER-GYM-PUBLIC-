@@ -8,9 +8,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
 
@@ -19,7 +19,7 @@ jobs:
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Init Capacitor
+      - name: Init & Add Android
         run: |
           npx cap init "CYBER GYM" "com.cybergym.app" --web-dir .
           npx cap add android
@@ -30,9 +30,7 @@ jobs:
           sed -i 's/compileSdk = .*/compileSdk = 34/' android/app/build.gradle
 
       - name: Build APK
-        run: |
-          cd android
-          ./gradlew assembleRelease
+        run: cd android && ./gradlew assembleRelease
 
       - name: Sign APK
         run: |
@@ -40,7 +38,7 @@ jobs:
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks key.jks --ks-pass pass:cybergym123 --key-pass pass:cybergym123 --out cyber-gym-signed.apk android/app/build/outputs/apk/release/app-release-unsigned.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cyber-gym-apk
           path: cyber-gym-signed.apk

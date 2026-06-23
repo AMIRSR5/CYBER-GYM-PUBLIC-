@@ -43,6 +43,24 @@ jobs:
       - name: Sync
         run: npx cap sync android
 
+      - name: Set App Icon
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp icon-192.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp icon-192.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp icon-192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp icon-192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cp icon-192.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp icon-192.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp icon-192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp icon-192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
       - name: Set SDK 34
         run: |
           sed -i 's/targetSdk = .*/targetSdk = 34/' android/app/build.gradle

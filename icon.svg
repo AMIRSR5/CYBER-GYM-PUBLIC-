@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#070912"/>
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#00F6FF" stroke-width="12" opacity="0.8"/>
+  <!-- left plate -->
+  <rect x="60" y="176" width="72" height="160" rx="16" fill="#00F6FF"/>
+  <!-- right plate -->
+  <rect x="380" y="176" width="72" height="160" rx="16" fill="#00F6FF"/>
+  <!-- bar -->
+  <rect x="132" y="242" width="248" height="28" rx="8" fill="#FF00CC"/>
+  <!-- left grip -->
+  <rect x="132" y="210" width="36" height="92" rx="6" fill="#00C8DC"/>
+  <!-- right grip -->
+  <rect x="344" y="210" width="36" height="92" rx="6" fill="#00C8DC"/>
+</svg>

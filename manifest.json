@@ -1,0 +1,29 @@
+{
+  "name": "CYBER GYM — سیستم تمرینی هفتگی",
+  "short_name": "CYBER GYM",
+  "description": "برنامه تمرینی شخصی با چک‌لیست تمرین، ثبت پیشرفت و مدیریت ورزشکاران",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070912",
+  "theme_color": "#070912",
+  "dir": "rtl",
+  "lang": "fa",
+  "id": "cybergym-app-v1",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "CYBER GYM برنامه‌ساز هوشمند"
+    }
+  ]
+}

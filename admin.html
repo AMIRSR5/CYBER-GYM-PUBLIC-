@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>CYBER GYM · Admin</title>
+<meta name="theme-color" content="#05060b">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#05060b; --panel:#0b0e19; --panel2:#0f1424; --line:#26314e;
+  --gold:#f2b93d; --teal:#29e8d6; --text:#eef2ff; --muted:#8b96b8; --danger:#ff4d6d; --ok:#3ee08a;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Vazirmatn',sans-serif;min-height:100vh;}
+.num{font-family:'Orbitron',sans-serif;}
+header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(180deg,rgba(11,14,25,.95),rgba(11,14,25,.4));position:sticky;top:0;z-index:10;}
+.brand{font-family:'Orbitron',sans-serif;font-weight:800;font-size:19px;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--gold),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.brand-sub{font-size:11px;color:var(--muted);}
+#logoutBtn{background:none;border:1px solid var(--danger);color:var(--danger);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:12.5px;}
+
+.wrap{max-width:1100px;margin:0 auto;padding:20px;}
+.hidden{display:none !important;}
+
+/* login */
+.login-wrap{max-width:380px;margin:12vh auto 0;padding:0 20px;}
+.card{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select{width:100%;background:#0a0d18;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px;font-size:14px;outline:none;}
+.field input:focus,.field select:focus{border-color:var(--teal);}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-weight:800;font-size:13.5px;cursor:pointer;
+  background:linear-gradient(90deg,var(--gold),var(--teal));color:#08090f;}
+.btn-sm{width:auto;padding:7px 12px;font-size:12px;border-radius:8px;}
+.btn-outline{background:none;border:1px solid var(--line);color:var(--text);}
+.msg{font-size:12.5px;color:var(--danger);min-height:16px;margin-top:8px;text-align:center;}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.tab{padding:9px 16px;border-radius:10px;border:1px solid var(--line);color:var(--muted);cursor:pointer;font-size:13px;font-weight:700;}
+.tab.on{border-color:var(--gold);color:var(--gold);background:rgba(242,185,61,.08);}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px;}
+.stat-box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;}
+.stat-box .v{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:800;color:var(--gold);}
+.stat-box .l{font-size:11px;color:var(--muted);margin-top:4px;}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:right;color:var(--muted);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+td{padding:8px;border-bottom:1px solid rgba(38,49,78,.5);white-space:nowrap;}
+tr:hover td{background:rgba(41,232,214,.04);}
+.table-wrap{overflow-x:auto;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px;}
+.pill{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.pill.admin{background:rgba(242,185,61,.15);color:var(--gold);}
+.pill.premium{background:rgba(41,232,214,.15);color:var(--teal);}
+.pill.off{background:rgba(139,150,184,.12);color:var(--muted);}
+input.mini{width:60px;background:#0a0d18;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:4px 6px;font-size:12px;text-align:center;}
+.search-row{display:flex;gap:10px;margin-bottom:14px;}
+.search-row input{flex:1;background:#0a0d18;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <header><span class="brand">CYBER GYM</span><span class="brand-sub">ADMIN PANEL</span></header>
+  <div class="login-wrap">
+    <div class="card">
+      <div class="field"><label>ایمیل ادمین</label><input type="email" id="loginEmail"></div>
+      <div class="field"><label>رمز عبور</label><input type="password" id="loginPass"></div>
+      <button class="btn" id="loginBtn">ورود به پنل</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </div>
+</div>
+
+<div id="adminScreen" class="hidden">
+  <header>
+    <div><span class="brand">CYBER GYM</span><span class="brand-sub" id="adminWho"> · ADMIN PANEL</span></div>
+    <button id="logoutBtn">خروج</button>
+  </header>
+  <div class="wrap">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="tabs">
+      <div class="tab on" data-t="users">کاربران</div>
+      <div class="tab" data-t="programs">برنامه‌ها</div>
+      <div class="tab" data-t="sessions">تمرین‌های اخیر</div>
+      <div class="tab" data-t="achievements">دستاوردها</div>
+    </div>
+
+    <div id="tab-users">
+      <div class="search-row"><input type="text" id="userSearch" placeholder="جستجو بر اساس نام یا ایمیل..."></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>نام</th><th>سطح</th><th>هدف</th><th>XP</th><th>Level</th><th>Streak</th><th>کل تمرین</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-programs" class="hidden">
+      <div class="table-wrap"><table>
+        <thead><tr><th>کاربر</th><th>هدف</th><th>سطح</th><th>فعال</th><th>تاریخ ساخت</th></tr></thead>
+        <tbody id="programsBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-sessions" class="hidden">
+      <div class="table-wrap"><table>
+        <thead><tr><th>کاربر</th><th>روز تمرین</th><th>شروع</th><th>XP</th></tr></thead>
+        <tbody id="sessionsBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-achievements" class="hidden">
+      <div class="table-wrap"><table>
+        <thead><tr><th>کد</th><th>عنوان</th><th>توضیح</th><th>XP جایزه</th></tr></thead>
+        <tbody id="achBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var cfg = window.CYBER_GYM_CONFIG || {};
+var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+var $ = function(id){ return document.getElementById(id); };
+var ALL_USERS = [];
+
+window.addEventListener('DOMContentLoaded', async function(){
+  var { data:{ session } } = await sb.auth.getSession();
+  if(session){ await tryEnterAdmin(session.user); }
+});
+
+$('loginBtn').addEventListener('click', async function(){
+  var msg = $('loginMsg'); msg.textContent = 'در حال ورود...';
+  var { data, error } = await sb.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPass').value });
+  if(error){ msg.textContent = error.message; return; }
+  await tryEnterAdmin(data.user, msg);
+});
+
+async function tryEnterAdmin(user, msg){
+  var { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if(!profile || !profile.is_admin){
+    if(msg) msg.textContent = 'این حساب دسترسی ادمین نداره.';
+    await sb.auth.signOut();
+    return;
+  }
+  $('loginScreen').classList.add('hidden');
+  $('adminScreen').classList.remove('hidden');
+  $('adminWho').textContent = ' · ' + (profile.full_name || user.email);
+  await loadAll();
+}
+
+$('logoutBtn').addEventListener('click', async function(){
+  await sb.auth.signOut();
+  $('adminScreen').classList.add('hidden');
+  $('loginScreen').classList.remove('hidden');
+});
+
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
+    tab.classList.add('on');
+    ['users','programs','sessions','achievements'].forEach(function(t){
+      document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab.dataset.t);
+    });
+  });
+});
+
+async function loadAll(){
+  await Promise.all([loadStats(), loadUsers(), loadPrograms(), loadSessions(), loadAchievements()]);
+}
+
+async function loadStats(){
+  var [{count:userCount}, {count:sessCount}, {count:prCount}] = await Promise.all([
+    sb.from('profiles').select('id', {count:'exact', head:true}),
+    sb.from('workout_sessions').select('id', {count:'exact', head:true}),
+    sb.from('personal_records').select('id', {count:'exact', head:true})
+  ]);
+  $('statGrid').innerHTML =
+    '<div class="stat-box"><div class="v num">'+(userCount||0)+'</div><div class="l">کل کاربران</div></div>' +
+    '<div class="stat-box"><div class="v num">'+(sessCount||0)+'</div><div class="l">کل تمرین‌های ثبت‌شده</div></div>' +
+    '<div class="stat-box"><div class="v num">'+(prCount||0)+'</div><div class="l">کل رکوردهای شخصی</div></div>';
+}
+
+async function loadUsers(){
+  var { data } = await sb.from('profiles').select('*').order('created_at', {ascending:false});
+  ALL_USERS = data || [];
+  renderUsers(ALL_USERS);
+}
+function renderUsers(list){
+  $('usersBody').innerHTML = list.map(function(u){
+    return '<tr data-id="'+u.id+'">' +
+      '<td>'+(u.full_name||'--')+'</td>' +
+      '<td>'+u.level+'</td>' +
+      '<td>'+u.goal+'</td>' +
+      '<td><input class="mini" type="number" value="'+(u.xp||0)+'" data-f="xp"></td>' +
+      '<td><input class="mini" type="number" value="'+(u.level_num||1)+'" data-f="level_num"></td>' +
+      '<td>'+(u.streak_current||0)+' (بهترین '+(u.streak_best||0)+')</td>' +
+      '<td>'+(u.total_workouts||0)+'</td>' +
+      '<td>' +
+        (u.is_admin ? '<span class="pill admin">ادمین</span> ' : '') +
+        (u.is_premium ? '<span class="pill premium">پرمیوم</span>' : '<span class="pill off">عادی</span>') +
+      '</td>' +
+      '<td>' +
+        '<button class="btn btn-sm btn-outline" data-act="save">ذخیره</button> ' +
+        '<button class="btn btn-sm btn-outline" data-act="admin">'+(u.is_admin?'حذف ادمین':'ادمین کن')+'</button> ' +
+        '<button class="btn btn-sm btn-outline" data-act="premium">'+(u.is_premium?'حذف پرمیوم':'پرمیوم کن')+'</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  Array.from($('usersBody').querySelectorAll('button')).forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      var tr = btn.closest('tr'); var id = tr.dataset.id;
+      var act = btn.dataset.act;
+      if(act === 'save'){
+        var xp = parseInt(tr.querySelector('[data-f="xp"]').value) || 0;
+        var lvl = parseInt(tr.querySelector('[data-f="level_num"]').value) || 1;
+        await sb.from('profiles').update({xp:xp, level_num:lvl}).eq('id', id);
+      } else if(act === 'admin'){
+        var u = ALL_USERS.find(function(x){return x.id===id;});
+        await sb.from('profiles').update({is_admin: !u.is_admin}).eq('id', id);
+      } else if(act === 'premium'){
+        var u2 = ALL_USERS.find(function(x){return x.id===id;});
+        await sb.from('profiles').update({is_premium: !u2.is_premium}).eq('id', id);
+      }
+      await loadUsers();
+    });
+  });
+}
+$('userSearch').addEventListener('input', function(){
+  var q = this.value.trim().toLowerCase();
+  renderUsers(ALL_USERS.filter(function(u){
+    return (u.full_name||'').toLowerCase().indexOf(q) !== -1;
+  }));
+});
+
+async function loadPrograms(){
+  var { data } = await sb.from('workout_programs').select('*, profiles(full_name)').order('created_at', {ascending:false}).limit(200);
+  $('programsBody').innerHTML = (data||[]).map(function(p){
+    return '<tr><td>'+(p.profiles ? p.profiles.full_name : p.user_id)+'</td><td>'+p.goal+'</td><td>'+p.level+'</td>' +
+      '<td>'+(p.is_active ? '✅' : '—')+'</td><td>'+new Date(p.created_at).toLocaleDateString('fa-IR')+'</td></tr>';
+  }).join('');
+}
+
+async function loadSessions(){
+  var { data } = await sb.from('workout_sessions').select('*, profiles(full_name)').order('started_at', {ascending:false}).limit(200);
+  $('sessionsBody').innerHTML = (data||[]).map(function(s){
+    return '<tr><td>'+(s.profiles ? s.profiles.full_name : s.user_id)+'</td><td>'+(s.program_day||'--')+'</td>' +
+      '<td>'+new Date(s.started_at).toLocaleString('fa-IR')+'</td><td>'+(s.xp_earned||0)+'</td></tr>';
+  }).join('');
+}
+
+async function loadAchievements(){
+  var { data } = await sb.from('achievements').select('*');
+  $('achBody').innerHTML = (data||[]).map(function(a){
+    return '<tr><td>'+a.code+'</td><td>'+a.icon+' '+a.title+'</td><td>'+(a.description||'')+'</td><td>'+a.xp_reward+'</td></tr>';
+  }).join('');
+}
+</script>
+</body>
+</html>

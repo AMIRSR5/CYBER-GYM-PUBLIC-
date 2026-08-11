@@ -66,7 +66,22 @@ input,select,textarea{font-family:inherit;}
 .muted{color:var(--muted);font-size:13px;line-height:1.9;}
 
 header.topbar{position:relative;z-index:1;padding:calc(16px + var(--safe-top)) 18px 12px;text-align:center;
-  border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(11,14,25,.92),rgba(11,14,25,.15));}
+  border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(11,14,25,.92),rgba(11,14,25,.15));
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.menu-btn,.bell-btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);width:38px;height:38px;
+  border-radius:10px;font-size:16px;cursor:pointer;flex-shrink:0;}
+.side-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:70;}
+.side-menu{position:fixed;top:0;bottom:0;right:0;width:78%;max-width:300px;background:var(--panel);
+  border-left:1px solid var(--line);z-index:71;padding:calc(20px + var(--safe-top)) 18px;
+  transform:translateX(100%);transition:transform .25s ease;}
+.side-menu.open{transform:translateX(0);}
+.side-title{font-family:'Orbitron',sans-serif;color:var(--gold);font-weight:800;font-size:15px;margin-bottom:18px;}
+.side-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.lang-switch{display:flex;gap:6px;background:var(--panel2);border-radius:20px;padding:3px;}
+.lang-opt{border:none;background:none;color:var(--muted);font-size:11.5px;padding:6px 12px;border-radius:16px;cursor:pointer;font-weight:700;}
+.lang-opt.on{background:linear-gradient(90deg,var(--gold),var(--teal));color:#08090f;}
+html[dir="ltr"] .side-menu{right:auto;left:0;border-left:none;border-right:1px solid var(--line);transform:translateX(-100%);}
+html[dir="ltr"] .side-menu.open{transform:translateX(0);}
 .brand{font-family:'Orbitron',sans-serif;font-weight:800;font-size:22px;letter-spacing:4px;
   background:linear-gradient(90deg,var(--gold),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;
   text-shadow:0 0 18px rgba(242,185,61,.25);}
@@ -123,8 +138,22 @@ main#view-root{position:relative;z-index:1;padding:16px 16px calc(90px + var(--s
 .week-info b{display:block;font-size:14px;margin-bottom:3px;}
 .week-info span{font-size:12px;color:var(--muted);}
 
-.day-tabs{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 14px;margin:0 -2px;}
-.day-tabs::-webkit-scrollbar{display:none;}
+.hero-card{position:relative;overflow:hidden;border-radius:16px;padding:24px 18px;margin-bottom:16px;min-height:150px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  clip-path:polygon(0 16px,16px 0,calc(100% - 26px) 0,100% 26px,100% 100%,26px 100%,0 calc(100% - 16px));}
+.hero-fx{position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 20%,rgba(242,185,61,.18),transparent 50%),radial-gradient(circle at 80% 80%,rgba(41,232,214,.18),transparent 50%);}
+.hero-title{position:relative;font-family:'Orbitron',sans-serif;font-weight:900;font-size:30px;letter-spacing:5px;
+  background:linear-gradient(90deg,var(--gold),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 30px rgba(41,232,214,.3);}
+.hero-barbell{position:relative;width:70%;max-width:220px;filter:drop-shadow(0 0 8px rgba(242,185,61,.35));}
+.hero-badge{position:absolute;top:14px;left:14px;width:46px;height:46px;border-radius:50%;
+  background:var(--panel2);border:2px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.hero-badge .num{font-size:15px;font-weight:800;color:var(--gold);line-height:1;}
+.hero-badge small{font-size:8px;color:var(--muted);}
+.chart-svg{width:100%;height:auto;display:block;}
+.day-tabs{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 14px;margin:0 -2px;}.day-tabs::-webkit-scrollbar{display:none;}
 .day-tab{flex:0 0 auto;min-width:118px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
   padding:12px 14px;text-align:center;cursor:pointer;}
 .day-tab b{display:block;font-size:13px;margin-bottom:4px;}
@@ -253,17 +282,51 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
 
 <!-- ===================== APP ===================== -->
 <div id="appScreen" class="hidden">
-<header class="topbar"><span class="brand">CYBER GYM</span><span class="brand-sub" id="topbarSub">خوش اومدی</span></header>
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <span class="brand">CYBER GYM</span><span class="brand-sub" id="topbarSub" data-i18n="welcome">خوش اومدی</span>
+  <button class="bell-btn" id="bellBtn">🔔</button>
+</header>
+
+<div class="side-overlay hidden" id="sideOverlay"></div>
+<div class="side-menu" id="sideMenu">
+  <div class="side-title" data-i18n="settings">تنظیمات</div>
+  <div class="side-item">
+    <span data-i18n="language">زبان</span>
+    <div class="lang-switch">
+      <button class="lang-opt" data-lang="fa">فارسی</button>
+      <button class="lang-opt" data-lang="en">EN</button>
+    </div>
+  </div>
+  <button class="btn-ghost btn-danger" id="sideLogoutBtn" data-i18n="logout">خروج از حساب</button>
+</div>
 <main id="view-root">
 
   <!-- DASHBOARD -->
   <section class="view active" id="view-dashboard">
+    <div class="hero-card">
+      <div class="hero-fx"></div>
+      <div class="hero-title">CYBER GYM</div>
+      <svg class="hero-barbell" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="20" width="10" height="20" rx="2" fill="url(#barGrad)"/>
+        <rect x="22" y="14" width="8" height="32" rx="2" fill="url(#barGrad)"/>
+        <rect x="32" y="26" width="60" height="8" rx="3" fill="url(#barGrad)"/>
+        <rect x="108" y="26" width="60" height="8" rx="3" fill="url(#barGrad)"/>
+        <rect x="170" y="14" width="8" height="32" rx="2" fill="url(#barGrad)"/>
+        <rect x="180" y="20" width="10" height="20" rx="2" fill="url(#barGrad)"/>
+        <defs><linearGradient id="barGrad" x1="0" y1="0" x2="200" y2="0">
+          <stop offset="0%" stop-color="#f2b93d"/><stop offset="100%" stop-color="#29e8d6"/>
+        </linearGradient></defs>
+      </svg>
+      <div class="hero-badge"><span class="num" id="heroLevel">1</span><small data-i18n="level">سطح</small></div>
+    </div>
+
     <div class="hex-card week-card">
       <div class="ring-wrap"><svg viewBox="0 0 80 80" width="76" height="76">
         <circle class="ring-track" cx="40" cy="40" r="34"></circle>
         <circle class="ring-fill" id="weekRing" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle>
       </svg><div class="ring-label num" id="weekPct">۰٪</div></div>
-      <div class="week-info"><b>پیشرفت این هفته</b><span id="weekCount">۰ از ۰ تمرین</span></div>
+      <div class="week-info"><b data-i18n="weekProgress">پیشرفت این هفته</b><span id="weekCount">۰ از ۰ تمرین</span></div>
     </div>
 
     <div class="stat-grid" style="margin-bottom:16px;">
@@ -290,9 +353,9 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
   <section class="view" id="view-workout">
     <div id="builderWrap">
       <div class="eyebrow">AI PROGRAM BUILDER</div>
-      <h2 class="title">برنامه‌ساز هوشمند</h2>
+      <h2 class="title" data-i18n="builderTitle">برنامه‌ساز هوشمند</h2>
       <p class="muted">با اطلاعات پروفایلت یه برنامه هفتگی می‌سازم. هر وقت خواستی می‌تونی دوباره بسازیش.</p>
-      <button class="btn-primary" id="generatePlanBtn">⚡ تولید برنامه هوشمند</button>
+      <button class="btn-primary" id="generatePlanBtn" data-i18n="generateBtn">⚡ تولید برنامه هوشمند</button>
     </div>
     <div id="programWrap" class="hidden">
       <div class="hex-card week-card" style="margin-bottom:14px;">
@@ -307,7 +370,7 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
         <div class="eyebrow" id="todayEyebrow">DAY</div>
         <div class="title" id="todayFocusTitle" style="margin-bottom:10px;"></div>
         <div id="todayExList"></div>
-        <button class="btn-primary" id="startSessionBtn" style="margin-top:10px;">🏋️ شروع تمرین (ثبت ست و وزن)</button>
+        <button class="btn-primary" id="startSessionBtn" style="margin-top:10px;" data-i18n="startSession">🏋️ شروع تمرین (ثبت ست و وزن)</button>
         <div class="corner-br"></div>
       </div>
       <button class="btn-ghost" id="regenPlanBtn">ساخت برنامه جدید</button>
@@ -346,19 +409,24 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
   <!-- PROGRESS -->
   <section class="view" id="view-progress">
     <div class="eyebrow">BODY PROGRESS</div>
-    <h2 class="title">پیشرفت بدنی</h2>
+    <h2 class="title" data-i18n="bodyProgressTitle">پیشرفت بدنی</h2>
     <div class="hex-card">
       <div class="row"><div class="field"><label>وزن (kg)</label><input type="number" id="bpWeight"></div>
       <div class="field"><label>دور شکم (cm)</label><input type="number" id="bpWaist"></div></div>
       <div class="row"><div class="field"><label>دور سینه (cm)</label><input type="number" id="bpChest"></div>
       <div class="field"><label>دور بازو (cm)</label><input type="number" id="bpArm"></div></div>
       <div class="field"><label>دور ران (cm)</label><input type="number" id="bpThigh"></div>
-      <button class="btn-primary" id="addBodyLogBtn">ثبت اندازه‌گیری</button>
+      <button class="btn-primary" id="addBodyLogBtn" data-i18n="addBodyLog">ثبت اندازه‌گیری</button>
     </div>
     <div id="bodyCompareCard" class="hex-card hidden">
       <div class="eyebrow">COMPARE</div>
       <div class="title" style="margin-bottom:8px;">اولین ثبت تا امروز</div>
       <div id="bodyCompareBody" class="muted"></div>
+    </div>
+    <div id="chartCard" class="hex-card hidden">
+      <div class="eyebrow">WEIGHT TREND</div>
+      <div class="title" style="margin-bottom:10px;font-size:15px;" data-i18n="weightChart">روند وزن</div>
+      <svg id="weightChartSvg" class="chart-svg" viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div id="bodyLogList"></div>
   </section>
@@ -383,22 +451,57 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
       <p class="muted">برنامه‌های پیشرفته، برنامه غذایی، AI Coach و تحلیل حرفه‌ای پیشرفت — به‌زودی.</p>
     </div>
     <a class="admin-link hidden" id="adminLink" href="admin.html">🛠 ورود به پنل ادمین</a>
-    <button class="btn-ghost btn-danger" id="logoutBtn" style="margin-top:14px;">خروج از حساب</button>
+    <button class="btn-ghost btn-danger" id="logoutBtn" style="margin-top:14px;" data-i18n="logout">خروج از حساب</button>
   </section>
 
 </main>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg><span>داشبورد</span></button>
-  <button class="nav-btn" data-view="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/></svg><span>تمرین</span></button>
-  <button class="nav-btn" data-view="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m21 15-4-4-9 9"/></svg><span>پیشرفت</span></button>
-  <button class="nav-btn" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg><span>پروفایل</span></button>
+  <button class="nav-btn active" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg><span data-i18n="navDashboard">داشبورد</span></button>
+  <button class="nav-btn" data-view="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/></svg><span data-i18n="navWorkout">تمرین</span></button>
+  <button class="nav-btn" data-view="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m21 15-4-4-9 9"/></svg><span data-i18n="navProgress">پیشرفت</span></button>
+  <button class="nav-btn" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg><span data-i18n="navProfile">پروفایل</span></button>
 </nav>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// =========================================================
+// I18N (فارسی / English)
+// =========================================================
+var TRANSLATIONS = {
+  fa: {
+    welcome:'خوش اومدی', settings:'تنظیمات', language:'زبان', logout:'خروج از حساب', level:'سطح',
+    weekProgress:'پیشرفت این هفته', weightChart:'روند وزن',
+    navDashboard:'داشبورد', navWorkout:'تمرین', navProgress:'پیشرفت', navProfile:'پروفایل',
+    builderTitle:'برنامه‌ساز هوشمند', generateBtn:'⚡ تولید برنامه هوشمند',
+    startSession:'🏋️ شروع تمرین (ثبت ست و وزن)', bodyProgressTitle:'پیشرفت بدنی', addBodyLog:'ثبت اندازه‌گیری'
+  },
+  en: {
+    welcome:'Welcome', settings:'Settings', language:'Language', logout:'Log out', level:'Level',
+    weekProgress:'This week', weightChart:'Weight trend',
+    navDashboard:'Dashboard', navWorkout:'Workout', navProgress:'Progress', navProfile:'Profile',
+    builderTitle:'AI Program Builder', generateBtn:'⚡ Generate smart plan',
+    startSession:'🏋️ Start workout (log sets)', bodyProgressTitle:'Body progress', addBodyLog:'Save measurement'
+  }
+};
+var CURRENT_LANG = localStorage.getItem('cybergym_lang') || 'fa';
+function applyLang(lang){
+  CURRENT_LANG = lang;
+  localStorage.setItem('cybergym_lang', lang);
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang === 'fa' ? 'rtl' : 'ltr');
+  var dict = TRANSLATIONS[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key = el.getAttribute('data-i18n');
+    if(dict[key]) el.textContent = dict[key];
+  });
+  document.querySelectorAll('.lang-opt').forEach(function(b){
+    b.classList.toggle('on', b.dataset.lang === lang);
+  });
+}
+
 // =========================================================
 // SUPABASE INIT
 // =========================================================
@@ -424,6 +527,7 @@ function $(id){ return document.getElementById(id); }
 // =========================================================
 window.addEventListener('DOMContentLoaded', boot);
 async function boot(){
+  applyLang(CURRENT_LANG);
   if(!cfg.SUPABASE_URL || cfg.SUPABASE_URL.indexOf('YOUR-PROJECT') !== -1){
     document.getElementById('splashScreen').innerHTML =
       '<span class="splash-logo" style="font-size:18px;letter-spacing:1px;text-align:center;padding:0 24px;">'+
@@ -576,6 +680,7 @@ async function renderDashboard(){
   var p = CURRENT_PROFILE;
   $('dashXP').textContent = p.xp || 0;
   $('dashLevel').textContent = p.level_num || 1;
+  $('heroLevel').textContent = p.level_num || 1;
   $('dashStreak').textContent = p.streak_current || 0;
   $('dashWeight').textContent = p.weight_kg || '--';
 
@@ -636,7 +741,7 @@ var SPLIT_TEMPLATES = {
 var DAY_PATTERNS = {
   3: [1,0,1,0,1,0,0], 4: [1,0,1,1,0,1,0], 5: [1,1,0,1,1,0,1], 6: [1,1,1,0,1,1,1]
 };
-var LEVEL_COUNT = {beginner:4, intermediate:5, advanced:6};
+var LEVEL_COUNT = {beginner:4, intermediate:4, advanced:4}; // طبق درخواست: همیشه ۴ حرکت در روز
 var GOAL_SCHEME = {
   hypertrophy:{cSets:4,cReps:'8-10',iSets:3,iReps:'10-12'},
   fatloss:{cSets:3,cReps:'12-15',iSets:3,iReps:'15'},
@@ -954,7 +1059,7 @@ async function renderBodyProgress(){
   var { data: logs } = await sb.from('body_progress').select('*').eq('user_id', CURRENT_USER.id).order('log_date', {ascending:true});
   if(!logs || logs.length === 0){
     $('bodyLogList').innerHTML = '<p class="muted center">هنوز اندازه‌گیری ثبت نشده.</p>';
-    hide($('bodyCompareCard'));
+    hide($('bodyCompareCard')); hide($('chartCard'));
     return;
   }
   if(logs.length >= 2){
@@ -965,10 +1070,42 @@ async function renderBodyProgress(){
       'دور شکم: ' + (first.waist_cm||'--') + ' → ' + (lastLog.waist_cm||'--') + ' (' + delta(first.waist_cm,lastLog.waist_cm) + ' cm)<br>' +
       'دور بازو: ' + (first.arm_cm||'--') + ' → ' + (lastLog.arm_cm||'--') + ' (' + delta(first.arm_cm,lastLog.arm_cm) + ' cm)';
     show($('bodyCompareCard'));
+    drawWeightChart(logs);
+    show($('chartCard'));
+  } else {
+    hide($('chartCard'));
   }
   $('bodyLogList').innerHTML = logs.slice().reverse().map(function(l){
     return '<div class="ex-item"><b>' + l.log_date + '</b><span>' + (l.weight_kg||'--') + ' kg</span></div>';
   }).join('');
+}
+
+function drawWeightChart(logs){
+  var pts = logs.filter(function(l){ return l.weight_kg != null; });
+  if(pts.length < 2) return;
+  var W=320,H=140,pad=24;
+  var weights = pts.map(function(p){ return p.weight_kg; });
+  var min = Math.min.apply(null, weights), max = Math.max.apply(null, weights);
+  if(min === max){ min -= 1; max += 1; }
+  var stepX = (W - pad*2) / (pts.length - 1);
+  function xAt(i){ return pad + i*stepX; }
+  function yAt(v){ return H - pad - ((v - min)/(max - min)) * (H - pad*2); }
+  var linePts = pts.map(function(p,i){ return xAt(i) + ',' + yAt(p.weight_kg); }).join(' ');
+  var areaPts = linePts + ' ' + xAt(pts.length-1) + ',' + (H-pad) + ' ' + xAt(0) + ',' + (H-pad);
+  var dots = pts.map(function(p,i){
+    return '<circle cx="'+xAt(i)+'" cy="'+yAt(p.weight_kg)+'" r="3.5" fill="#f2b93d" stroke="#05060b" stroke-width="1.5"/>';
+  }).join('');
+  var svg =
+    '<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#29e8d6" stop-opacity="0.35"/>' +
+      '<stop offset="100%" stop-color="#29e8d6" stop-opacity="0"/>' +
+    '</linearGradient></defs>' +
+    '<polygon points="' + areaPts + '" fill="url(#areaGrad)"/>' +
+    '<polyline points="' + linePts + '" fill="none" stroke="#29e8d6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+    dots +
+    '<text x="' + pad + '" y="14" fill="#8b96b8" font-size="10" font-family="Orbitron">' + max.toFixed(1) + '</text>' +
+    '<text x="' + pad + '" y="' + (H-pad+14) + '" fill="#8b96b8" font-size="10" font-family="Orbitron">' + min.toFixed(1) + '</text>';
+  $('weightChartSvg').innerHTML = svg;
 }
 
 // =========================================================
@@ -993,6 +1130,22 @@ async function renderProfile(){
 $('logoutBtn').addEventListener('click', async function(){
   await sb.auth.signOut();
 });
+
+// =========================================================
+// SIDE MENU (hamburger + language)
+// =========================================================
+function openSideMenu(){ $('sideMenu').classList.add('open'); show($('sideOverlay')); }
+function closeSideMenu(){ $('sideMenu').classList.remove('open'); hide($('sideOverlay')); }
+$('menuBtn').addEventListener('click', openSideMenu);
+$('sideOverlay').addEventListener('click', closeSideMenu);
+document.querySelectorAll('.lang-opt').forEach(function(btn){
+  btn.addEventListener('click', function(){ applyLang(btn.dataset.lang); });
+});
+$('sideLogoutBtn').addEventListener('click', async function(){
+  await sb.auth.signOut();
+  closeSideMenu();
+});
+$('bellBtn').addEventListener('click', function(){ toast(CURRENT_LANG === 'fa' ? 'فعلاً اعلانی نداری' : 'No notifications yet'); });
 </script>
 </body>
 </html>

@@ -41,13 +41,27 @@ input,select,textarea{font-family:inherit;}
 .bg-fx::after{content:"";position:absolute;inset:0;
   background:radial-gradient(circle at 15% 10%,rgba(242,185,61,.14),transparent 45%),radial-gradient(circle at 88% 25%,rgba(41,232,214,.14),transparent 45%);}
 
-.hex-card{position:relative;background:linear-gradient(160deg,var(--panel),var(--panel2));
+.hex-card{position:relative;background:
+    linear-gradient(160deg,var(--panel),var(--panel2)),
+    linear-gradient(rgba(242,185,61,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(41,232,214,.04) 1px,transparent 1px);
+  background-size:auto,16px 16px,16px 16px;
   border:1px solid var(--line);border-radius:4px;
-  clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
-  padding:18px;margin:0 0 16px;}
-.hex-card::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:4px;
-  box-shadow:inset 0 0 0 1px rgba(242,185,61,.08);}
-.eyebrow{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;color:var(--teal);font-weight:700;margin-bottom:4px;}
+  clip-path:polygon(0 16px,16px 0,calc(100% - 26px) 0,100% 26px,100% 100%,26px 100%,0 calc(100% - 16px));
+  padding:20px 18px 18px;margin:0 0 16px;}
+.hex-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(242,185,61,.10),inset 0 0 24px rgba(41,232,214,.03);}
+/* corner brackets, tech HUD style */
+.hex-card::after{content:"";position:absolute;left:10px;top:10px;width:22px;height:22px;pointer-events:none;
+  border-top:2px solid var(--gold);border-right:2px solid var(--gold);opacity:.65;
+  clip-path:polygon(0 0,100% 0,100% 30%,30% 30%,30% 100%,0 100%);}
+.corner-br{position:absolute;right:10px;bottom:10px;width:22px;height:22px;pointer-events:none;
+  border-bottom:2px solid var(--teal);border-left:2px solid var(--teal);opacity:.65;
+  clip-path:polygon(100% 100%,0 100%,0 70%,70% 70%,70% 0,100% 0);}
+.hex-card{position:relative;}
+.eyebrow{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;color:var(--teal);font-weight:700;margin-bottom:4px;
+  display:flex;align-items:center;gap:8px;}
+.eyebrow::before{content:"";width:14px;height:1px;background:var(--teal);display:inline-block;}
+.eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
 .title{font-size:20px;font-weight:800;margin:0 0 10px;color:var(--gold);}
 .muted{color:var(--muted);font-size:13px;line-height:1.9;}
 
@@ -109,6 +123,24 @@ main#view-root{position:relative;z-index:1;padding:16px 16px calc(90px + var(--s
 .week-info b{display:block;font-size:14px;margin-bottom:3px;}
 .week-info span{font-size:12px;color:var(--muted);}
 
+.day-tabs{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 14px;margin:0 -2px;}
+.day-tabs::-webkit-scrollbar{display:none;}
+.day-tab{flex:0 0 auto;min-width:118px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;text-align:center;cursor:pointer;}
+.day-tab b{display:block;font-size:13px;margin-bottom:4px;}
+.day-tab span{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;height:28px;overflow:hidden;}
+.day-tab .cnt{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--teal);}
+.day-tab.active{border-color:var(--gold);box-shadow:0 0 14px rgba(242,185,61,.25);}
+.day-tab.rest{opacity:.6;}
+.check-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;}
+.check-item.done{border-color:var(--ok);}
+.check-item.done b{text-decoration:line-through;color:var(--muted);}
+.check-item b{font-size:13.5px;display:block;}
+.check-item .sub{font-size:11.5px;color:var(--teal);}
+.check-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;}
+.check-item.done .check-circle{border-color:var(--ok);background:var(--ok);color:#08090f;}
 .ex-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .ex-item b{font-size:13.5px;}
 .ex-item span{font-size:12px;color:var(--teal);}
@@ -263,11 +295,20 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
       <button class="btn-primary" id="generatePlanBtn">⚡ تولید برنامه هوشمند</button>
     </div>
     <div id="programWrap" class="hidden">
+      <div class="hex-card week-card" style="margin-bottom:14px;">
+        <div class="ring-wrap"><svg viewBox="0 0 80 80" width="76" height="76">
+          <circle class="ring-track" cx="40" cy="40" r="34"></circle>
+          <circle class="ring-fill" id="planWeekRing" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle>
+        </svg><div class="ring-label num" id="planWeekPct">۰٪</div></div>
+        <div class="week-info"><b>پیشرفت این هفته</b><span id="planWeekCount">۰ از ۰ تمرین انجام شده</span></div>
+      </div>
+      <div class="day-tabs" id="dayTabs"></div>
       <div class="hex-card">
-        <div class="eyebrow" id="todayEyebrow">TODAY</div>
+        <div class="eyebrow" id="todayEyebrow">DAY</div>
         <div class="title" id="todayFocusTitle" style="margin-bottom:10px;"></div>
         <div id="todayExList"></div>
-        <button class="btn-primary" id="startSessionBtn" style="margin-top:10px;">🏋️ شروع تمرین</button>
+        <button class="btn-primary" id="startSessionBtn" style="margin-top:10px;">🏋️ شروع تمرین (ثبت ست و وزن)</button>
+        <div class="corner-br"></div>
       </div>
       <button class="btn-ghost" id="regenPlanBtn">ساخت برنامه جدید</button>
     </div>
@@ -642,24 +683,82 @@ $('generatePlanBtn').addEventListener('click', async function(){
 });
 $('regenPlanBtn').addEventListener('click', function(){ $('generatePlanBtn').click(); });
 
+var SELECTED_DAY_IDX = todayIndex();
+
+function checklistKey(dayId, idx){ return dayId + '-' + idx; }
+function getChecklist(){ return (CURRENT_PROGRAM && CURRENT_PROGRAM.checklist) || {}; }
+
 function renderWorkoutTab(){
   hide($('sessionWrap')); hide($('summaryWrap'));
   if(!CURRENT_PROGRAM){ show($('builderWrap')); hide($('programWrap')); return; }
   hide($('builderWrap')); show($('programWrap'));
-  var t = todayEntry(CURRENT_PROGRAM);
-  $('todayFocusTitle').textContent = t.focus + ' — ' + t.day;
-  $('todayExList').innerHTML = t.exercises.map(function(e){
-    return '<div class="ex-item"><b>' + e.n + '</b><span>' + e.s + '</span></div>';
+  SELECTED_DAY_IDX = todayIndex();
+  renderDayTabs();
+  renderSelectedDay();
+}
+
+function renderDayTabs(){
+  var checklist = getChecklist();
+  $('dayTabs').innerHTML = CURRENT_PROGRAM.days.map(function(d, i){
+    var total = d.exercises.length;
+    var done = d.exercises.filter(function(e, idx){ return checklist[checklistKey(d.id, idx)]; }).length;
+    var isRest = d.exercises.every(function(e){ return e.sets === 0; });
+    return '<div class="day-tab ' + (i===SELECTED_DAY_IDX?'active':'') + ' ' + (isRest?'rest':'') + '" data-i="' + i + '">' +
+      '<b>' + d.day + '</b><span>' + d.focus + '</span><div class="cnt num">' + done + '/' + total + '</div>' +
+    '</div>';
   }).join('');
+  Array.from($('dayTabs').querySelectorAll('.day-tab')).forEach(function(tab){
+    tab.addEventListener('click', function(){
+      SELECTED_DAY_IDX = parseInt(tab.dataset.i);
+      renderDayTabs(); renderSelectedDay();
+    });
+  });
+
+  var totalAll=0, doneAll=0;
+  CURRENT_PROGRAM.days.forEach(function(d){
+    d.exercises.forEach(function(e, idx){ totalAll++; if(checklist[checklistKey(d.id, idx)]) doneAll++; });
+  });
+  var pct = totalAll ? Math.round((doneAll/totalAll)*100) : 0;
+  var circumference = 213.6;
+  $('planWeekRing').style.strokeDashoffset = circumference - (circumference*pct/100);
+  $('planWeekPct').textContent = pct + '٪';
+  $('planWeekCount').textContent = doneAll + ' از ' + totalAll + ' تمرین انجام شده';
+}
+
+function renderSelectedDay(){
+  var d = CURRENT_PROGRAM.days[SELECTED_DAY_IDX];
+  var checklist = getChecklist();
+  $('todayEyebrow').textContent = SELECTED_DAY_IDX === todayIndex() ? 'TODAY' : 'DAY';
+  $('todayFocusTitle').textContent = d.focus + ' — ' + d.day;
+  $('todayExList').innerHTML = d.exercises.map(function(e, idx){
+    var key = checklistKey(d.id, idx);
+    var done = !!checklist[key];
+    return '<div class="check-item ' + (done?'done':'') + '" data-idx="' + idx + '">' +
+      '<div><b>' + e.n + '</b><div class="sub">' + e.s + '</div></div>' +
+      '<div class="check-circle">✓</div>' +
+    '</div>';
+  }).join('');
+  Array.from($('todayExList').querySelectorAll('.check-item')).forEach(function(item){
+    item.addEventListener('click', async function(){
+      var idx = parseInt(item.dataset.idx);
+      var key = checklistKey(d.id, idx);
+      var checklist2 = getChecklist();
+      checklist2[key] = !checklist2[key];
+      CURRENT_PROGRAM.checklist = checklist2;
+      renderDayTabs(); renderSelectedDay();
+      await sb.from('workout_programs').update({checklist: checklist2}).eq('id', CURRENT_PROGRAM.id);
+      renderDashboard();
+    });
+  });
 }
 
 // =========================================================
 // SESSION MODE (شروع تمرین)
 // =========================================================
 $('startSessionBtn').addEventListener('click', async function(){
-  var t = todayEntry(CURRENT_PROGRAM);
+  var t = CURRENT_PROGRAM.days[SELECTED_DAY_IDX];
   var realExercises = t.exercises.filter(function(e){ return e.sets > 0; });
-  if(realExercises.length === 0){ toast('امروز روز ریکاوریه، تمرین سنگین نداری 🙂'); return; }
+  if(realExercises.length === 0){ toast('این روز ریکاوریه، تمرین سنگین نداره 🙂'); return; }
   var { data: sess } = await sb.from('workout_sessions').insert({
     user_id: CURRENT_USER.id, program_day: t.focus
   }).select().maybeSingle();

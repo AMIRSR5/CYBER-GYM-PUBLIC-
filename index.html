@@ -140,8 +140,10 @@ main#view-root{position:relative;z-index:1;padding:16px 16px calc(90px + var(--s
 
 .bell-dot{position:absolute;top:5px;left:5px;width:8px;height:8px;border-radius:50%;background:var(--danger);display:none;}
 .bell-dot.on{display:block;}
-.notif-panel{position:absolute;top:46px;left:0;width:260px;max-height:320px;overflow-y:auto;background:var(--panel2);
-  border:1px solid var(--line);border-radius:12px;padding:10px;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.4);text-align:right;}
+.notif-panel{position:fixed;top:calc(64px + var(--safe-top));left:14px;right:14px;max-width:360px;margin:0 auto;
+  max-height:340px;overflow-y:auto;background:#0c101d;
+  border:1px solid var(--gold);border-radius:12px;padding:10px;z-index:91;box-shadow:0 14px 40px rgba(0,0,0,.6);text-align:right;}
+#notifOverlay{z-index:90;}
 .notif-item{padding:10px;border-bottom:1px solid var(--line);}
 .notif-item:last-child{border-bottom:none;}
 .notif-item b{display:block;font-size:12.5px;margin-bottom:3px;color:var(--gold);}
@@ -311,6 +313,7 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
   <span class="brand">CYBER GYM</span><span class="brand-sub" id="topbarSub" data-i18n="welcome">خوش اومدی</span>
   <div style="position:relative;">
     <button class="bell-btn" id="bellBtn">🔔<span class="bell-dot" id="bellDot"></span></button>
+    <div class="side-overlay hidden" id="notifOverlay"></div>
     <div class="notif-panel hidden" id="notifPanel"></div>
   </div>
 </header>
@@ -418,6 +421,11 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
           <circle class="ring-fill" id="planWeekRing" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle>
         </svg><div class="ring-label num" id="planWeekPct">۰٪</div></div>
         <div class="week-info"><b>پیشرفت این هفته</b><span id="planWeekCount">۰ از ۰ تمرین انجام شده</span></div>
+      </div>
+      <div id="premiumUpgradeNote" class="hex-card hidden" style="border-color:var(--gold);">
+        <div class="eyebrow">⚡ PREMIUM</div>
+        <p class="muted" style="margin-bottom:10px;">حالا که پرمیومی، یه برنامه‌ی سنگین‌تر و پیشرفته‌تر (۵ حرکت در روز + شدت بیشتر) برات آماده‌ست. برنامه‌ی فعلیت هنوز نسخه‌ی قبلیه.</p>
+        <button class="btn-primary" id="upgradeProgramBtn">🔥 ارتقا به برنامه پرمیوم</button>
       </div>
       <div class="day-tabs" id="dayTabs"></div>
       <div class="hex-card">
@@ -829,26 +837,26 @@ var SPLIT_TEMPLATES = {
   3: [{focus:'فول‌بادی A', ex:['اسکات با هالتر','پرس سینه','زیربغل قایقی','پرس سرشانه','پلانک']},
       {focus:'فول‌بادی B', ex:['ددلیفت','شنا سوئدی','لت پول‌داون','لانج','کرانچ']},
       {focus:'فول‌بادی C', ex:['هیپ تراست','پرس سینه شیب‌دار','رو با دمبل','جلو بازو','ساق پا']}],
-  4: [{focus:'بالاتنه فشاری', ex:['پرس سینه','پرس سرشانه','دیپ','پشت بازو سیم‌کش']},
-      {focus:'پایین‌تنه', ex:['اسکات','ددلیفت رومانیایی','لانج','ساق پا']},
-      {focus:'بالاتنه کششی', ex:['بارفیکس/لت','زیربغل قایقی','جلو بازو','فیس پول']},
-      {focus:'فول‌بادی + کور', ex:['اسکات جامپ','شنا سوئدی','پلانک','کرانچ کابل']}],
+  4: [{focus:'بالاتنه فشاری', ex:['پرس سینه','پرس سرشانه','دیپ','پشت بازو سیم‌کش','قفسه سینه']},
+      {focus:'پایین‌تنه', ex:['اسکات','ددلیفت رومانیایی','لانج','ساق پا','پشت پا دستگاه']},
+      {focus:'بالاتنه کششی', ex:['بارفیکس/لت','زیربغل قایقی','جلو بازو','فیس پول','رو با دمبل تک‌دست']},
+      {focus:'فول‌بادی + کور', ex:['اسکات جامپ','شنا سوئدی','پلانک','کرانچ کابل','بالا آوردن پا']}],
   5: [{focus:'سینه و پشت‌بازو', ex:['پرس سینه','پرس بالاسینه','قفسه سینه','پشت بازو سیم‌کش','دیپ']},
       {focus:'پشت و جلوبازو', ex:['بارفیکس/لت','زیربغل قایقی','رو با دمبل','جلو بازو هالتر','جلو بازو چکشی']},
       {focus:'پا', ex:['اسکات','ددلیفت رومانیایی','لانج','جلو پا','پشت پا','ساق پا']},
       {focus:'سرشانه و شکم', ex:['پرس سرشانه','نشر جانب','نشر خم','کرانچ','پلانک']},
-      {focus:'فول‌بادی سبک', ex:['اسکات جامپ','شنا سوئدی','کول‌آپ','کتل‌بل سوئینگ']}],
-  6: [{focus:'سینه', ex:['پرس سینه','پرس بالاسینه','قفسه سینه','دیپ']},
-      {focus:'پشت', ex:['بارفیکس/لت','زیربغل قایقی','رو با دمبل','فیس پول']},
-      {focus:'پا', ex:['اسکات','ددلیفت رومانیایی','لانج','ساق پا']},
-      {focus:'سرشانه', ex:['پرس سرشانه','نشر جانب','نشر خم','شراگ']},
-      {focus:'بازو', ex:['جلو بازو هالتر','پشت بازو سیم‌کش','جلو بازو چکشی','دیپ']},
-      {focus:'شکم و کور', ex:['کرانچ','پلانک','بالا آوردن پا','چرخش روسی']}]
+      {focus:'فول‌بادی سبک', ex:['اسکات جامپ','شنا سوئدی','کول‌آپ','کتل‌بل سوئینگ','پلانک']}],
+  6: [{focus:'سینه', ex:['پرس سینه','پرس بالاسینه','قفسه سینه','دیپ','پرس سینه دمبل تک‌دست']},
+      {focus:'پشت', ex:['بارفیکس/لت','زیربغل قایقی','رو با دمبل','فیس پول','پول‌اور']},
+      {focus:'پا', ex:['اسکات','ددلیفت رومانیایی','لانج','ساق پا','جلو پا دستگاه']},
+      {focus:'سرشانه', ex:['پرس سرشانه','نشر جانب','نشر خم','شراگ','نشر جانب کابل']},
+      {focus:'بازو', ex:['جلو بازو هالتر','پشت بازو سیم‌کش','جلو بازو چکشی','دیپ','پشت بازو دیپ نشسته']},
+      {focus:'شکم و کور', ex:['کرانچ','پلانک','بالا آوردن پا','چرخش روسی','کرانچ کابل']}]
 };
 var DAY_PATTERNS = {
   3: [1,0,1,0,1,0,0], 4: [1,0,1,1,0,1,0], 5: [1,1,0,1,1,0,1], 6: [1,1,1,0,1,1,1]
 };
-var LEVEL_COUNT = {beginner:4, intermediate:4, advanced:4}; // طبق درخواست: همیشه ۴ حرکت در روز
+var LEVEL_COUNT = {beginner:4, intermediate:4, advanced:4}; // پایه: همیشه ۴ حرکت — پرمیوم: ۵ حرکت + شدت بیشتر
 var GOAL_SCHEME = {
   hypertrophy:{cSets:4,cReps:'8-10',iSets:3,iReps:'10-12'},
   fatloss:{cSets:3,cReps:'12-15',iSets:3,iReps:'15'},
@@ -858,7 +866,8 @@ var GOAL_SCHEME = {
 function generatePersonalPlan(profile){
   var pattern = DAY_PATTERNS[profile.days_per_week] || DAY_PATTERNS[5];
   var split = SPLIT_TEMPLATES[profile.days_per_week] || SPLIT_TEMPLATES[5];
-  var count = LEVEL_COUNT[profile.level] || 5;
+  var isPremium = !!profile.is_premium;
+  var count = isPremium ? 5 : (LEVEL_COUNT[profile.level] || 4);
   var scheme = GOAL_SCHEME[profile.goal] || GOAL_SCHEME.general;
   var splitIdx = 0, plan = [];
   pattern.forEach(function(isDay, i){
@@ -870,10 +879,14 @@ function generatePersonalPlan(profile){
         var isCompound = idx < 2;
         var sets = isCompound ? scheme.cSets : scheme.iSets;
         var reps = isCompound ? scheme.cReps : scheme.iReps;
-        return { n:name, s: sets + '×' + reps, sets: sets };
+        if(isPremium) sets += 1; // شدت بیشتر برای پرمیوم
+        var isLast = idx === list.length - 1;
+        var note = (isPremium && isLast) ? ' + دراپ‌ست آخر' : '';
+        return { n:name, s: sets + '×' + reps + note, sets: sets };
       });
-      if(profile.goal === 'fatloss') exercises.push({n:'هوازی پایان تمرین', s:'۱۵-۲۰ دقیقه', sets:0});
-      plan.push({ id:slot.id, day:slot.day, focus:tmpl.focus, exercises:exercises });
+      if(profile.goal === 'fatloss') exercises.push({n:'هوازی پایان تمرین', s: (isPremium?'۲۵-۳۰':'۱۵-۲۰') + ' دقیقه', sets:0});
+      if(isPremium) exercises.push({n:'سوپرست پایانی (شدت بالا)', s:'۲×۱۵ بدون استراحت بین حرکات', sets:2});
+      plan.push({ id:slot.id, day:slot.day, focus:(isPremium?'⚡ ':'') + tmpl.focus, exercises:exercises, premium:isPremium });
     } else {
       plan.push({ id:slot.id, day:slot.day, focus:'ریکاوری / استراحت فعال',
         exercises:[{n:'کشش کل بدن', s:'۱۰-۱۵ دقیقه', sets:0}] });
@@ -894,6 +907,7 @@ $('generatePlanBtn').addEventListener('click', async function(){
   renderWorkoutTab(); renderDashboard();
 });
 $('regenPlanBtn').addEventListener('click', function(){ $('generatePlanBtn').click(); });
+$('upgradeProgramBtn').addEventListener('click', function(){ $('generatePlanBtn').click(); });
 
 var SELECTED_DAY_IDX = todayIndex();
 
@@ -907,6 +921,10 @@ function renderWorkoutTab(){
   SELECTED_DAY_IDX = todayIndex();
   renderDayTabs();
   renderSelectedDay();
+  var upgradeNote = $('premiumUpgradeNote');
+  if(CURRENT_PROFILE.is_premium && !CURRENT_PROGRAM.days.some(function(d){return d.premium;})){
+    show(upgradeNote);
+  } else { hide(upgradeNote); }
 }
 
 function renderDayTabs(){
@@ -1252,7 +1270,6 @@ $('sideLogoutBtn').addEventListener('click', async function(){
   await sb.auth.signOut();
   closeSideMenu();
 });
-$('bellBtn').addEventListener('click', function(){ toast(CURRENT_LANG === 'fa' ? 'فعلاً اعلانی نداری' : 'No notifications yet'); });
 
 // =========================================================
 // ABOUT MODAL
@@ -1279,12 +1296,21 @@ function renderNotifPanel(){
 $('bellBtn').addEventListener('click', function(e){
   e.stopPropagation();
   renderNotifPanel();
+  var willOpen = $('notifPanel').classList.contains('hidden');
   $('notifPanel').classList.toggle('hidden');
+  $('notifOverlay').classList.toggle('hidden', !willOpen);
   $('bellDot').classList.remove('on');
   localStorage.setItem('cybergym_notif_seen', '1');
 });
+$('notifOverlay').addEventListener('click', function(){
+  $('notifPanel').classList.add('hidden');
+  $('notifOverlay').classList.add('hidden');
+});
 document.addEventListener('click', function(e){
-  if(!$('notifPanel').contains(e.target) && e.target.id !== 'bellBtn'){ $('notifPanel').classList.add('hidden'); }
+  if(!$('notifPanel').contains(e.target) && e.target.id !== 'bellBtn'){
+    $('notifPanel').classList.add('hidden');
+    $('notifOverlay').classList.add('hidden');
+  }
 });
 if(!localStorage.getItem('cybergym_notif_seen')) $('bellDot').classList.add('on');
 

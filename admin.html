@@ -49,6 +49,15 @@ header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justif
 .stat-box .v{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:800;color:var(--gold);}
 .stat-box .l{font-size:11px;color:var(--muted);margin-top:4px;}
 
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-card{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;
+  padding:20px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal-card h3{margin:0 0 14px;color:var(--gold);font-size:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ach-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.ach-form input{grid-column:span 1;}
+.ach-form input[name="description"]{grid-column:span 2;}
+
 table{width:100%;border-collapse:collapse;font-size:12.5px;}
 th{text-align:right;color:var(--muted);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;}
 td{padding:8px;border-bottom:1px solid rgba(38,49,78,.5);white-space:nowrap;}
@@ -101,24 +110,79 @@ input.mini{width:60px;background:#0a0d18;border:1px solid var(--line);color:var(
 
     <div id="tab-programs" class="hidden">
       <div class="table-wrap"><table>
-        <thead><tr><th>کاربر</th><th>هدف</th><th>سطح</th><th>فعال</th><th>تاریخ ساخت</th></tr></thead>
+        <thead><tr><th>کاربر</th><th>هدف</th><th>سطح</th><th>فعال</th><th>تاریخ ساخت</th><th>عملیات</th></tr></thead>
         <tbody id="programsBody"></tbody>
       </table></div>
     </div>
 
     <div id="tab-sessions" class="hidden">
       <div class="table-wrap"><table>
-        <thead><tr><th>کاربر</th><th>روز تمرین</th><th>شروع</th><th>XP</th></tr></thead>
+        <thead><tr><th>کاربر</th><th>روز تمرین</th><th>شروع</th><th>XP</th><th>عملیات</th></tr></thead>
         <tbody id="sessionsBody"></tbody>
       </table></div>
     </div>
 
     <div id="tab-achievements" class="hidden">
+      <div class="card">
+        <h3 style="margin-top:0;font-size:14px;color:var(--gold);">افزودن دستاورد جدید</h3>
+        <form id="achForm" class="ach-form">
+          <input name="code" placeholder="کد یکتا (مثلا first_workout)" required>
+          <input name="title" placeholder="عنوان" required>
+          <input name="description" placeholder="توضیح">
+          <input name="icon" placeholder="ایموجی مثلا 🏅" value="🏅">
+          <input name="xp_reward" type="number" placeholder="XP جایزه" value="50">
+          <button class="btn btn-sm" type="submit" style="grid-column:span 2;">افزودن</button>
+        </form>
+      </div>
       <div class="table-wrap"><table>
-        <thead><tr><th>کد</th><th>عنوان</th><th>توضیح</th><th>XP جایزه</th></tr></thead>
+        <thead><tr><th>کد</th><th>عنوان</th><th>توضیح</th><th>XP جایزه</th><th>عملیات</th></tr></thead>
         <tbody id="achBody"></tbody>
       </table></div>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="userModalOverlay">
+  <div class="modal-card">
+    <h3>ویرایش کامل کاربر</h3>
+    <form id="userEditForm">
+      <input type="hidden" name="id">
+      <div class="field"><label>نام</label><input name="full_name"></div>
+      <div class="grid2">
+        <div class="field"><label>سن</label><input name="age" type="number"></div>
+        <div class="field"><label>جنسیت</label><select name="gender"><option value="male">مرد</option><option value="female">زن</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>قد (cm)</label><input name="height_cm" type="number"></div>
+        <div class="field"><label>وزن (kg)</label><input name="weight_kg" type="number"></div>
+      </div>
+      <div class="field"><label>هدف</label>
+        <select name="goal">
+          <option value="hypertrophy">عضله‌سازی</option><option value="fatloss">چربی‌سوزی</option>
+          <option value="strength">افزایش قدرت</option><option value="general">فیتنس عمومی</option>
+        </select>
+      </div>
+      <div class="field"><label>سطح</label>
+        <select name="level"><option value="beginner">مبتدی</option><option value="intermediate">متوسط</option><option value="advanced">حرفه‌ای</option></select>
+      </div>
+      <div class="field"><label>روزهای تمرین در هفته</label>
+        <select name="days_per_week"><option value="3">۳</option><option value="4">۴</option><option value="5">۵</option><option value="6">۶</option></select>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>XP</label><input name="xp" type="number"></div>
+        <div class="field"><label>Level</label><input name="level_num" type="number"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Streak فعلی</label><input name="streak_current" type="number"></div>
+        <div class="field"><label>بهترین Streak</label><input name="streak_best" type="number"></div>
+      </div>
+      <div class="field"><label>کل تمرین‌ها</label><input name="total_workouts" type="number"></div>
+      <div class="grid2" style="margin-top:6px;">
+        <button type="submit" class="btn">ذخیره تغییرات</button>
+        <button type="button" class="btn btn-outline" id="closeUserModalBtn">انصراف</button>
+      </div>
+      <button type="button" class="btn btn-sm" style="width:100%;margin-top:10px;background:var(--danger);color:#fff;" id="deleteUserBtn">حذف کامل این کاربر</button>
+    </form>
   </div>
 </div>
 
@@ -196,8 +260,8 @@ function renderUsers(list){
       '<td>'+(u.full_name||'--')+'</td>' +
       '<td>'+u.level+'</td>' +
       '<td>'+u.goal+'</td>' +
-      '<td><input class="mini" type="number" value="'+(u.xp||0)+'" data-f="xp"></td>' +
-      '<td><input class="mini" type="number" value="'+(u.level_num||1)+'" data-f="level_num"></td>' +
+      '<td>'+(u.xp||0)+'</td>' +
+      '<td>'+(u.level_num||1)+'</td>' +
       '<td>'+(u.streak_current||0)+' (بهترین '+(u.streak_best||0)+')</td>' +
       '<td>'+(u.total_workouts||0)+'</td>' +
       '<td>' +
@@ -205,7 +269,7 @@ function renderUsers(list){
         (u.is_premium ? '<span class="pill premium">پرمیوم</span>' : '<span class="pill off">عادی</span>') +
       '</td>' +
       '<td>' +
-        '<button class="btn btn-sm btn-outline" data-act="save">ذخیره</button> ' +
+        '<button class="btn btn-sm btn-outline" data-act="edit">ویرایش کامل</button> ' +
         '<button class="btn btn-sm btn-outline" data-act="admin">'+(u.is_admin?'حذف ادمین':'ادمین کن')+'</button> ' +
         '<button class="btn btn-sm btn-outline" data-act="premium">'+(u.is_premium?'حذف پرمیوم':'پرمیوم کن')+'</button>' +
       '</td>' +
@@ -216,10 +280,9 @@ function renderUsers(list){
     btn.addEventListener('click', async function(){
       var tr = btn.closest('tr'); var id = tr.dataset.id;
       var act = btn.dataset.act;
-      if(act === 'save'){
-        var xp = parseInt(tr.querySelector('[data-f="xp"]').value) || 0;
-        var lvl = parseInt(tr.querySelector('[data-f="level_num"]').value) || 1;
-        await sb.from('profiles').update({xp:xp, level_num:lvl}).eq('id', id);
+      if(act === 'edit'){
+        openUserModal(ALL_USERS.find(function(x){return x.id===id;}));
+        return;
       } else if(act === 'admin'){
         var u = ALL_USERS.find(function(x){return x.id===id;});
         await sb.from('profiles').update({is_admin: !u.is_admin}).eq('id', id);
@@ -238,28 +301,117 @@ $('userSearch').addEventListener('input', function(){
   }));
 });
 
+// =========================================================
+// FULL USER EDIT MODAL
+// =========================================================
+var EDITING_USER_ID = null;
+function openUserModal(u){
+  EDITING_USER_ID = u.id;
+  var f = $('userEditForm');
+  f.full_name.value = u.full_name || '';
+  f.age.value = u.age || '';
+  f.gender.value = u.gender || 'male';
+  f.height_cm.value = u.height_cm || '';
+  f.weight_kg.value = u.weight_kg || '';
+  f.goal.value = u.goal || 'general';
+  f.level.value = u.level || 'beginner';
+  f.days_per_week.value = u.days_per_week || 3;
+  f.xp.value = u.xp || 0;
+  f.level_num.value = u.level_num || 1;
+  f.streak_current.value = u.streak_current || 0;
+  f.streak_best.value = u.streak_best || 0;
+  f.total_workouts.value = u.total_workouts || 0;
+  $('userModalOverlay').classList.remove('hidden');
+}
+$('closeUserModalBtn').addEventListener('click', function(){ $('userModalOverlay').classList.add('hidden'); });
+$('userEditForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var f = e.target;
+  var payload = {
+    full_name: f.full_name.value.trim(),
+    age: parseInt(f.age.value) || null,
+    gender: f.gender.value,
+    height_cm: parseFloat(f.height_cm.value) || null,
+    weight_kg: parseFloat(f.weight_kg.value) || null,
+    goal: f.goal.value,
+    level: f.level.value,
+    days_per_week: parseInt(f.days_per_week.value),
+    xp: parseInt(f.xp.value) || 0,
+    level_num: parseInt(f.level_num.value) || 1,
+    streak_current: parseInt(f.streak_current.value) || 0,
+    streak_best: parseInt(f.streak_best.value) || 0,
+    total_workouts: parseInt(f.total_workouts.value) || 0
+  };
+  await sb.from('profiles').update(payload).eq('id', EDITING_USER_ID);
+  $('userModalOverlay').classList.add('hidden');
+  await loadUsers();
+});
+$('deleteUserBtn').addEventListener('click', async function(){
+  if(!confirm('مطمئنی؟ این کاربر و تمام داده‌هاش (تمرین، رکورد، برنامه) کامل حذف می‌شه.')) return;
+  await sb.from('profiles').delete().eq('id', EDITING_USER_ID);
+  $('userModalOverlay').classList.add('hidden');
+  await loadUsers();
+});
+
 async function loadPrograms(){
   var { data } = await sb.from('workout_programs').select('*, profiles(full_name)').order('created_at', {ascending:false}).limit(200);
   $('programsBody').innerHTML = (data||[]).map(function(p){
-    return '<tr><td>'+(p.profiles ? p.profiles.full_name : p.user_id)+'</td><td>'+p.goal+'</td><td>'+p.level+'</td>' +
-      '<td>'+(p.is_active ? '✅' : '—')+'</td><td>'+new Date(p.created_at).toLocaleDateString('fa-IR')+'</td></tr>';
+    return '<tr data-id="'+p.id+'"><td>'+(p.profiles ? p.profiles.full_name : p.user_id)+'</td><td>'+p.goal+'</td><td>'+p.level+'</td>' +
+      '<td>'+(p.is_active ? '✅' : '—')+'</td><td>'+new Date(p.created_at).toLocaleDateString('fa-IR')+'</td>' +
+      '<td><button class="btn btn-sm" style="background:var(--danger);color:#fff;" data-del="'+p.id+'">حذف</button></td></tr>';
   }).join('');
+  Array.from($('programsBody').querySelectorAll('[data-del]')).forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      if(!confirm('این برنامه حذف بشه؟')) return;
+      await sb.from('workout_programs').delete().eq('id', btn.dataset.del);
+      await loadPrograms();
+    });
+  });
 }
 
 async function loadSessions(){
   var { data } = await sb.from('workout_sessions').select('*, profiles(full_name)').order('started_at', {ascending:false}).limit(200);
   $('sessionsBody').innerHTML = (data||[]).map(function(s){
     return '<tr><td>'+(s.profiles ? s.profiles.full_name : s.user_id)+'</td><td>'+(s.program_day||'--')+'</td>' +
-      '<td>'+new Date(s.started_at).toLocaleString('fa-IR')+'</td><td>'+(s.xp_earned||0)+'</td></tr>';
+      '<td>'+new Date(s.started_at).toLocaleString('fa-IR')+'</td><td>'+(s.xp_earned||0)+'</td>' +
+      '<td><button class="btn btn-sm" style="background:var(--danger);color:#fff;" data-del="'+s.id+'">حذف</button></td></tr>';
   }).join('');
+  Array.from($('sessionsBody').querySelectorAll('[data-del]')).forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      if(!confirm('این سشن حذف بشه؟')) return;
+      await sb.from('workout_sessions').delete().eq('id', btn.dataset.del);
+      await loadSessions();
+    });
+  });
 }
 
 async function loadAchievements(){
   var { data } = await sb.from('achievements').select('*');
   $('achBody').innerHTML = (data||[]).map(function(a){
-    return '<tr><td>'+a.code+'</td><td>'+a.icon+' '+a.title+'</td><td>'+(a.description||'')+'</td><td>'+a.xp_reward+'</td></tr>';
+    return '<tr data-code="'+a.code+'"><td>'+a.code+'</td><td>'+a.icon+' '+a.title+'</td><td>'+(a.description||'')+'</td><td>'+a.xp_reward+'</td>' +
+      '<td><button class="btn btn-sm" style="background:var(--danger);color:#fff;" data-del="'+a.code+'">حذف</button></td></tr>';
   }).join('');
+  Array.from($('achBody').querySelectorAll('[data-del]')).forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      if(!confirm('این دستاورد حذف بشه؟')) return;
+      await sb.from('achievements').delete().eq('code', btn.dataset.del);
+      await loadAchievements();
+    });
+  });
 }
+$('achForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var f = e.target;
+  var payload = {
+    code: f.code.value.trim(), title: f.title.value.trim(),
+    description: f.description.value.trim(), icon: f.icon.value.trim() || '🏅',
+    xp_reward: parseInt(f.xp_reward.value) || 0
+  };
+  var { error } = await sb.from('achievements').upsert(payload);
+  if(error){ alert(error.message); return; }
+  f.reset(); f.icon.value = '🏅'; f.xp_reward.value = 50;
+  await loadAchievements();
+});
 </script>
 </body>
 </html>

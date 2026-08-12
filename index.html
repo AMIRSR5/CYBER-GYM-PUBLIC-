@@ -180,6 +180,23 @@ main#view-root{position:relative;z-index:1;padding:16px 16px calc(90px + var(--s
 .hero-badge small{font-size:8px;color:var(--muted);}
 .chart-svg{width:100%;height:auto;display:block;}
 .day-tabs{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 14px;margin:0 -2px;}.day-tabs::-webkit-scrollbar{display:none;}
+.custom-day-card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
+.custom-day-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.custom-day-head b{font-size:14px;}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;z-index:1;}
+.toggle-track{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.2s;}
+.toggle-track::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s;}
+.toggle-switch input:checked ~ .toggle-track{background:linear-gradient(90deg,var(--gold),var(--teal));}
+.toggle-switch input:checked ~ .toggle-track::after{right:23px;background:#08090f;}
+.custom-day-body{margin-top:10px;}
+.custom-day-body input[type="text"]{width:100%;background:#0a0d18;border:1px solid var(--line);color:var(--text);
+  border-radius:8px;padding:9px 10px;font-size:12.5px;margin-bottom:8px;}
+.custom-ex-row{display:grid;grid-template-columns:1fr 55px 55px auto;gap:6px;margin-bottom:7px;align-items:center;}
+.custom-ex-row input{background:#0a0d18;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 6px;font-size:12px;text-align:center;}
+.custom-ex-row input[name="n"]{text-align:right;}
+.rm-ex-btn{background:none;border:1px solid var(--danger);color:var(--danger);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:14px;}
+.add-ex-btn{background:none;border:1px dashed var(--teal);color:var(--teal);border-radius:8px;padding:7px;width:100%;font-size:12px;cursor:pointer;margin-top:2px;}
 .day-tab{flex:0 0 auto;min-width:118px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
   padding:12px 14px;text-align:center;cursor:pointer;}
 .day-tab b{display:block;font-size:13px;margin-bottom:4px;}
@@ -413,7 +430,18 @@ nav.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;
       <h2 class="title" data-i18n="builderTitle">برنامه‌ساز هوشمند</h2>
       <p class="muted">با اطلاعات پروفایلت یه برنامه هفتگی می‌سازم. هر وقت خواستی می‌تونی دوباره بسازیش.</p>
       <button class="btn-primary" id="generatePlanBtn" data-i18n="generateBtn">⚡ تولید برنامه هوشمند</button>
+      <button class="btn-ghost" id="openCustomBuilderBtn">✏️ یا برنامه شخصی خودمو وارد کنم</button>
     </div>
+
+    <div id="customBuilderWrap" class="hidden">
+      <div class="eyebrow">CUSTOM PROGRAM</div>
+      <h2 class="title">برنامه شخصی من</h2>
+      <p class="muted">روزهایی که تمرین داری رو روشن کن و حرکت‌هاشو خودت وارد کن.</p>
+      <div id="customDaysList"></div>
+      <button class="btn-primary" id="saveCustomProgramBtn" style="margin-top:6px;">💾 ذخیره برنامه شخصی</button>
+      <button class="btn-ghost" id="cancelCustomBuilderBtn">انصراف</button>
+    </div>
+
     <div id="programWrap" class="hidden">
       <div class="hex-card week-card" style="margin-bottom:14px;">
         <div class="ring-wrap"><svg viewBox="0 0 80 80" width="76" height="76">
@@ -895,19 +923,128 @@ function generatePersonalPlan(profile){
   return plan;
 }
 
-$('generatePlanBtn').addEventListener('click', async function(){
-  var plan = generatePersonalPlan(CURRENT_PROFILE);
+async function saveProgram(plan, meta){
+  meta = meta || {};
   var { data, error } = await sb.from('workout_programs').insert({
-    user_id: CURRENT_USER.id, days: plan, goal: CURRENT_PROFILE.goal, level: CURRENT_PROFILE.level, is_active:true
+    user_id: CURRENT_USER.id, days: plan,
+    goal: meta.goal || CURRENT_PROFILE.goal, level: meta.level || CURRENT_PROFILE.level, is_active:true
   }).select().maybeSingle();
-  if(error){ toast('خطا: ' + error.message); return; }
+  if(error){ toast('خطا: ' + error.message); return null; }
   await sb.from('workout_programs').update({is_active:false}).eq('user_id', CURRENT_USER.id).neq('id', data.id);
   CURRENT_PROGRAM = data;
+  return data;
+}
+
+$('generatePlanBtn').addEventListener('click', async function(){
+  var plan = generatePersonalPlan(CURRENT_PROFILE);
+  var data = await saveProgram(plan);
+  if(!data) return;
   toast('برنامه‌ت ساخته شد! 💪');
   renderWorkoutTab(); renderDashboard();
 });
-$('regenPlanBtn').addEventListener('click', function(){ $('generatePlanBtn').click(); });
+$('regenPlanBtn').addEventListener('click', function(){
+  hide($('programWrap')); show($('builderWrap'));
+});
 $('upgradeProgramBtn').addEventListener('click', function(){ $('generatePlanBtn').click(); });
+
+// =========================================================
+// CUSTOM PERSONAL PROGRAM BUILDER
+// =========================================================
+var CUSTOM_DAYS = null;
+function freshCustomDays(){
+  return WEEK_DAYS.map(function(d){ return { id:d.id, day:d.day, active:false, focus:'', exercises:[] }; });
+}
+$('openCustomBuilderBtn').addEventListener('click', function(){
+  CUSTOM_DAYS = freshCustomDays();
+  renderCustomBuilder();
+  hide($('builderWrap')); show($('customBuilderWrap'));
+});
+$('cancelCustomBuilderBtn').addEventListener('click', function(){
+  hide($('customBuilderWrap')); show($('builderWrap'));
+});
+
+function renderCustomBuilder(){
+  $('customDaysList').innerHTML = CUSTOM_DAYS.map(function(d, di){
+    var exRows = d.exercises.map(function(e, ei){
+      return '<div class="custom-ex-row">' +
+        '<input type="text" name="n" placeholder="اسم حرکت" value="'+ (e.n||'').replace(/"/g,'') +'" data-di="'+di+'" data-ei="'+ei+'" data-f="n">' +
+        '<input type="number" name="sets" placeholder="ست" value="'+e.sets+'" data-di="'+di+'" data-ei="'+ei+'" data-f="sets">' +
+        '<input type="text" name="reps" placeholder="تکرار" value="'+(e.reps||'') +'" data-di="'+di+'" data-ei="'+ei+'" data-f="reps">' +
+        '<button class="rm-ex-btn" data-rm-di="'+di+'" data-rm-ei="'+ei+'">✕</button>' +
+      '</div>';
+    }).join('');
+    return '<div class="custom-day-card">' +
+      '<div class="custom-day-head"><b>'+d.day+'</b>' +
+        '<label class="toggle-switch"><input type="checkbox" data-toggle-di="'+di+'" '+(d.active?'checked':'')+'><span class="toggle-track"></span></label>' +
+      '</div>' +
+      (d.active ?
+        '<div class="custom-day-body">' +
+          '<input type="text" placeholder="اسم روز (مثلا سینه و پشت‌بازو)" value="'+(d.focus||'').replace(/"/g,'')+'" data-focus-di="'+di+'">' +
+          exRows +
+          '<button class="add-ex-btn" data-add-di="'+di+'">+ افزودن حرکت</button>' +
+        '</div>' : '') +
+    '</div>';
+  }).join('');
+
+  Array.from($('customDaysList').querySelectorAll('[data-toggle-di]')).forEach(function(cb){
+    cb.addEventListener('change', function(){
+      var di = parseInt(cb.dataset.toggleDi);
+      CUSTOM_DAYS[di].active = cb.checked;
+      if(cb.checked && CUSTOM_DAYS[di].exercises.length === 0){
+        CUSTOM_DAYS[di].exercises.push({n:'', sets:3, reps:'10'});
+      }
+      renderCustomBuilder();
+    });
+  });
+  Array.from($('customDaysList').querySelectorAll('[data-focus-di]')).forEach(function(inp){
+    inp.addEventListener('input', function(){ CUSTOM_DAYS[parseInt(inp.dataset.focusDi)].focus = inp.value; });
+  });
+  Array.from($('customDaysList').querySelectorAll('[data-add-di]')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      CUSTOM_DAYS[parseInt(btn.dataset.addDi)].exercises.push({n:'', sets:3, reps:'10'});
+      renderCustomBuilder();
+    });
+  });
+  Array.from($('customDaysList').querySelectorAll('[data-rm-di]')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var di = parseInt(btn.dataset.rmDi), ei = parseInt(btn.dataset.rmEi);
+      CUSTOM_DAYS[di].exercises.splice(ei, 1);
+      renderCustomBuilder();
+    });
+  });
+  Array.from($('customDaysList').querySelectorAll('.custom-ex-row input')).forEach(function(inp){
+    inp.addEventListener('input', function(){
+      var di = parseInt(inp.dataset.di), ei = parseInt(inp.dataset.ei), f = inp.dataset.f;
+      CUSTOM_DAYS[di].exercises[ei][f] = inp.value;
+    });
+  });
+}
+
+$('saveCustomProgramBtn').addEventListener('click', async function(){
+  var activeDays = CUSTOM_DAYS.filter(function(d){ return d.active; });
+  if(activeDays.length === 0){ toast('حداقل یه روز رو فعال کن.'); return; }
+  var invalid = activeDays.some(function(d){ return d.exercises.length === 0 || d.exercises.some(function(e){ return !e.n || !e.n.trim(); }); });
+  if(invalid){ toast('برای هر روز فعال، اسم همه‌ی حرکت‌ها رو وارد کن.'); return; }
+
+  var plan = CUSTOM_DAYS.map(function(d){
+    if(!d.active){
+      return { id:d.id, day:d.day, focus:'ریکاوری / استراحت فعال', exercises:[{n:'کشش کل بدن', s:'۱۰-۱۵ دقیقه', sets:0}] };
+    }
+    return {
+      id:d.id, day:d.day, focus: (d.focus && d.focus.trim()) || 'برنامه شخصی',
+      exercises: d.exercises.map(function(e){
+        var sets = parseInt(e.sets) || 1;
+        return { n:e.n.trim(), s: sets + '×' + (e.reps || '10'), sets: sets };
+      })
+    };
+  });
+
+  var data = await saveProgram(plan, { goal:'custom', level:'custom' });
+  if(!data) return;
+  toast('برنامه شخصیت ذخیره شد ✅');
+  hide($('customBuilderWrap'));
+  renderWorkoutTab(); renderDashboard();
+});
 
 var SELECTED_DAY_IDX = todayIndex();
 
@@ -915,7 +1052,7 @@ function checklistKey(dayId, idx){ return dayId + '-' + idx; }
 function getChecklist(){ return (CURRENT_PROGRAM && CURRENT_PROGRAM.checklist) || {}; }
 
 function renderWorkoutTab(){
-  hide($('sessionWrap')); hide($('summaryWrap'));
+  hide($('sessionWrap')); hide($('summaryWrap')); hide($('customBuilderWrap'));
   if(!CURRENT_PROGRAM){ show($('builderWrap')); hide($('programWrap')); return; }
   hide($('builderWrap')); show($('programWrap'));
   SELECTED_DAY_IDX = todayIndex();
